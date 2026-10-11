@@ -27,7 +27,7 @@
 
 ## 1. Слои в проекте
 
-Выделяются четыре слоя плюс composition root.
+Выделяются четыре слоя + composition root.
 
 ### 1.1. Domain — ядро
 
@@ -122,3 +122,17 @@ graph LR
 ```
 
 Сплошные стрелки — зависимости. Пунктирная — реализация интерфейсов.
+
+## 2. Соответствие текущих классов слоям
+
+| Файл | Текущее содержимое | Целевой слой | Комментарий |
+|---|---|---|---|
+| `Models.kt` | `Resource`, `AccessRule`, `User`, `Action` | Domain | Чистые модели. `User.equals/hashCode` → вынести в `PasswordHash` |
+| `Models.kt` | `AccessRequest` | Application (DTO) | Не домен: это форма входных данных use case |
+| `Storage.kt` | `Storage`, `hashPassword`, `hexToBytes` | Infrastructure | Разделить на storage + hasher + utils |
+| `Validator.kt` | `ResourceValidator` | Application + Infrastructure | Интерфейс → Application, реализация → Infrastructure |
+| `AccessService.kt` | `AccessService` | Application | Разбить на use case'ы |
+| `AccessService.kt` | `UserRepository`, `ResourceRepository`, `RuleRepository` | Domain | Интерфейсы → домен |
+| `AccessService.kt` | `StorageUserRepository`, `StorageResourceRepository`, `StorageRuleRepository` | Infrastructure | Реализации → инфраструктура |
+| `Cli.kt` | `EXIT_*`, `REQUIRED_KEYS`, `parseKeyValues`, `printHelp` | Interface Adapters | Разделить на `CliArgument`, `CliParser`, `HelpPrinter`, `ExitCode` |
+| `Main.kt` | `main()` | Composition root | Тонкий `main` + `ApplicationFactory` |
