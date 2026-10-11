@@ -172,3 +172,24 @@ jobs:
 1. Страница проекта → **Administration** → **Quality Gate**.
 2. **«Create»** — создать свой порог.
 3. Задать значения и привязать к проекту.
+
+## Шаг 8. Проверка интеграции
+
+1. Запушить код, чтобы сработал workflow:
+
+```bash
+git add .
+git commit -m "Add SonarCloud integration"
+git push origin lab3-analysis
+```
+
+2. Проверить статус GitHub Actions:
+   - репозиторий → вкладка **Actions**;
+   - должен появиться workflow `SonarCloud Analysis`.
+
+3. Проверить результаты в SonarCloud:
+   - открыть [sonarcloud.io](https://sonarcloud.io);
+   - проект → Issues, Coverage, Duplications.
+
+4. Статус Quality Gate в PR:
+   - на странице PR появится ✅ или ❌.
