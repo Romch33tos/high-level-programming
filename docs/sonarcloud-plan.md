@@ -62,3 +62,28 @@ sonar.sourceEncoding=UTF-8
 # Отчёт Detekt (удалить, если Detekt не используется)
 sonar.kotlin.detekt.reportPaths=build/reports/detekt.xml
 ```
+## Шаг 4. Установка SonarScanner CLI
+
+### Вариант A. Прямая загрузка (для локального запуска)
+
+```bash
+wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.2.0.1092-linux.zip
+unzip sonar-scanner-cli-7.2.0.1092-linux.zip
+export PATH=$PATH:$(pwd)/sonar-scanner-7.2.0.1092-linux/bin
+```
+
+Проверка:
+
+```bash
+sonar-scanner -h
+```
+
+### Вариант B. Docker
+
+```bash
+docker run --rm \
+  -e SONAR_HOST_URL="https://sonarcloud.io" \
+  -e SONAR_TOKEN="your-token" \
+  -v "$(pwd):/usr/src" \
+  sonarsource/sonar-scanner-cli
+```
