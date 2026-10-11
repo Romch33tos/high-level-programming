@@ -36,3 +36,29 @@
 - **«New repository secret»**.
 - Name: `SONAR_TOKEN`.
 - Value: сохранённый токен.
+
+## Шаг 3. Файл `sonar-project.properties`
+
+Создать в корне проекта:
+
+```properties
+# Идентификаторы проекта (получить после создания проекта в SonarCloud)
+sonar.projectKey=your-org_your-repo
+sonar.organization=your-org
+
+# Метаданные (опционально)
+sonar.projectName=Access Control CLI
+sonar.projectVersion=1.0
+
+# Исходники относительно этого файла
+sonar.sources=src
+
+# Исключения
+sonar.exclusions=**/build/**,**/lib/**,**/*.jar
+
+# Кодировка
+sonar.sourceEncoding=UTF-8
+
+# Отчёт Detekt (удалить, если Detekt не используется)
+sonar.kotlin.detekt.reportPaths=build/reports/detekt.xml
+```
