@@ -264,3 +264,75 @@ interface RequestValidator {
     fun validate(request: AccessRequest): AccessResult?
 }
 ```
+### 4.4. Направление зависимостей после рефакторинга
+
+```mermaid
+graph LR
+    Main[Main.kt] --> Factory[ApplicationFactory]
+    Factory --> Hasher[Sha256PasswordHasher]
+    Factory --> Validator[RegexRequestValidator]
+    Factory --> Repo[StorageXxxRepository]
+    Factory --> Service[AccessService]
+
+    Hasher -.->|реализует| HasherI[PasswordHasher]
+    Validator -.->|реализует| ValidatorI[RequestValidator]
+    Repo -.->|реализует| RepoI[XxxRepository]
+
+    Cli[CliParser / CliRequestMapper] --> Service
+    Service --> HasherI
+    Service --> ValidatorI
+    Service --> RepoI
+    Service --> Domain[Domain models]
+```
+
+Ни одна стрелка не идёт от Domain наружу.
+
+### 4.5. Пошаговый план
+
+Порядок выбран так, чтобы после каждого шага проект собирался и работал.
+
+1. **Выделить `domain/model/`:**
+   - Перенести `Resource`, `AccessRule`, `User`, `Action`.
+   - Добавить value-классы `ResourcePath`, `PasswordHash`.
+   - Убедиться: в пакете нет ни одного `import java.*`.
+
+2. **Выделить `domain/repository/`:**
+   - Перенести интерфейсы `UserRepository`, `ResourceRepository`, `RuleRepository`.
+
+3. **Выделить `domain/service/`:**
+   - Добавить `PasswordHasher`.
+   - Вынести логику `findEffectiveRule` в `EffectiveRuleResolver`.
+
+4. **Выделить `application/`:**
+   - Перенести `AccessRequest` в `application/dto/`, добавить `AccessResult`.
+   - Разбить `AccessService.check` на `Authenticator`, `AccessResolver`, `RequestValidator`.
+   - Сам `AccessService` оставить тонким.
+
+5. **Выделить `presentation/cli/`:**
+   - Разделить `Cli.kt` на `CliArgument`, `CliParser`, `HelpPrinter`, `ExitCode`.
+   - Добавить `CliRequestMapper` для преобразования в `AccessRequest`.
+
+6. **Выделить `infrastructure/`:**
+   - Разделить `Storage` на три хранилища.
+   - Перенести `hashPassword` в `Sha256PasswordHasher`, `hexToBytes` — в `Hex`.
+   - Перенести реализации репозиториев.
+   - Реализовать `RegexRequestValidator`.
+   - Создать `ApplicationFactory`.
+
+7. **Переписать `Main.kt`:**
+   - Тонкий `main()`: парсинг → валидация → `ApplicationFactory.create()` → вызов → маппинг `AccessResult` в `ExitCode`.
+
+8. **Обновить `build.sh` / `run.sh` / `test.sh`:**
+   - Прописать новые пути к исходникам, если изменилась структура `src/`.
+
+9. **Прогнать тесты:**
+   - `./test.sh` должен проходить 10/10.
+
+10. **Обновить `README.md`:**
+    - Отразить новую структуру пакетов.
+
+В рамках ЛР3 рефакторинг не выполняется — это план на следующие работы.
+
+### 4.6. Что остаётся неизменным
+
+Поведение приложения не меняется: те же коды возврата, тот же парсинг CLI, те же данные в `Storage`. Меняются только расположение классов и направление зависимостей.
