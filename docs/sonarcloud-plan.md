@@ -62,6 +62,7 @@ sonar.sourceEncoding=UTF-8
 # Отчёт Detekt (удалить, если Detekt не используется)
 sonar.kotlin.detekt.reportPaths=build/reports/detekt.xml
 ```
+
 ## Шаг 4. Установка SonarScanner CLI
 
 ### Вариант A. Прямая загрузка (для локального запуска)
@@ -87,3 +88,15 @@ docker run --rm \
   -v "$(pwd):/usr/src" \
   sonarsource/sonar-scanner-cli
 ```
+
+## Шаг 5. Локальный запуск анализа
+
+```bash
+export SONAR_TOKEN="your-token-here"
+
+sonar-scanner \
+  -Dsonar.host.url=https://sonarcloud.io \
+  -Dsonar.token=$SONAR_TOKEN
+```
+
+При успехе в терминале появится `ANALYSIS SUCCESSFUL`.
