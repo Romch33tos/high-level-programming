@@ -161,3 +161,81 @@ Infrastructure:  class Sha256PasswordHasher : PasswordHasher     ← реали�
 Application:     class Authenticator(private val hasher: PasswordHasher)
                  ← зависит от абстракции, не от реализации
 ```
+
+## 4. План реструктуризации
+
+### 4.1. Целевая структура пакетов
+
+```
+src/
+├── domain/                          ← ядро, ни от чего не зависит
+│   ├── model/
+│   │   ├── Resource.kt
+│   │   ├── AccessRule.kt
+│   │   ├── User.kt
+│   │   ├── Action.kt
+│   │   ├── ResourcePath.kt          ← новый value-класс
+│   │   └── PasswordHash.kt          ← новый value-класс
+│   ├── repository/
+│   │   ├── UserRepository.kt
+│   │   ├── ResourceRepository.kt
+│   │   └── RuleRepository.kt
+│   └── service/
+│       ├── PasswordHasher.kt        ← новый интерфейс
+│       └── EffectiveRuleResolver.kt ← новое доменное правило
+│
+├── application/                     ← сценарии
+│   ├── dto/
+│   │   ├── AccessRequest.kt
+│   │   └── AccessResult.kt
+│   ├── AccessService.kt             ← тонкий оркестратор
+│   ├── Authenticator.kt             ← новый
+│   ├── AccessResolver.kt            ← новый
+│   └── validation/
+│       └── RequestValidator.kt      ← новый интерфейс
+│
+├── presentation/                    ← Interface Adapters
+│   └── cli/
+│       ├── CliParser.kt
+│       ├── HelpPrinter.kt
+│       ├── ExitCode.kt
+│       ├── CliArgument.kt
+│       └── CliRequestMapper.kt
+│
+├── infrastructure/                  ← реализации
+│   ├── storage/
+│   │   ├── InMemoryUserStorage.kt
+│   │   ├── InMemoryResourceStorage.kt
+│   │   └── InMemoryRuleStorage.kt
+│   ├── repository/
+│   │   ├── StorageUserRepository.kt
+│   │   ├── StorageResourceRepository.kt
+│   │   └── StorageRuleRepository.kt
+│   ├── security/
+│   │   └── Sha256PasswordHasher.kt
+│   ├── validation/
+│   │   └── RegexRequestValidator.kt
+│   └── utils/
+│       └── Hex.kt
+│
+├── ApplicationFactory.kt            ← composition root
+└── Main.kt                          ← тонкая точка входа
+```
+
+### 4.2. Что и куда переносится
+
+| Что | Откуда | Куда | Причина |
+|---|---|---|---|
+| `Resource`, `AccessRule`, `User`, `Action` | `Models.kt` | `domain/model/` | Чистые доменные модели |
+| `AccessRequest` | `Models.kt` | `application/dto/` | DTO use case, не домен |
+| `UserRepository`, `ResourceRepository`, `RuleRepository` | `AccessService.kt` | `domain/repository/` | Абстракции принадлежат домену |
+| `AccessService` | `AccessService.kt` | `application/` | Оркестратор сценариев |
+| `Storage` | `Storage.kt` | `infrastructure/storage/` (разбить на 3) | Инфраструктура |
+| `hashPassword` | `Storage.kt` | `infrastructure/security/Sha256PasswordHasher` | Отдельная ответственность |
+| `hexToBytes` | `Storage.kt` | `infrastructure/utils/Hex.kt` | Утилита |
+| `StorageXxxRepository` | `AccessService.kt` | `infrastructure/repository/` | Реализации абстракций |
+| `ResourceValidator` | `Validator.kt` | `application/validation` + `infrastructure/validation` | Разделить интерфейс и реализацию |
+| `parseKeyValues` | `Cli.kt` | `presentation/cli/CliParser.kt` | Адаптер |
+| `printHelp` | `Cli.kt` | `presentation/cli/HelpPrinter.kt` | Адаптер |
+| `EXIT_*` | `Cli.kt` | `presentation/cli/ExitCode.kt` | Enum вместо констант |
+| `Main` | `Main.kt` | оставить в корне, оставить тонким | Composition root |
