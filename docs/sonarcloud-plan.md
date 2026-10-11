@@ -100,3 +100,57 @@ sonar-scanner \
 ```
 
 При успехе в терминале появится `ANALYSIS SUCCESSFUL`.
+
+## Шаг 6. Автоматизация через GitHub Actions
+
+Файл `.github/workflows/sonarcloud.yml`:
+
+```yaml
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build project
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Check Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+```
+
+Что важно в этом workflow:
+
+- `fetch-depth: 0` — SonarCloud нужна полная история для инкрементального анализа.
+- `build.sh` выполняется до сканирования, чтобы появились артефакты.
+- `SONAR_TOKEN` читается из GitHub Secrets (шаг 2).
+- Проверка Quality Gate блокирует мерж PR, если качество ниже порога.
