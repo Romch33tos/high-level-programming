@@ -239,3 +239,28 @@ src/
 | `printHelp` | `Cli.kt` | `presentation/cli/HelpPrinter.kt` | Адаптер |
 | `EXIT_*` | `Cli.kt` | `presentation/cli/ExitCode.kt` | Enum вместо констант |
 | `Main` | `Main.kt` | оставить в корне, оставить тонким | Composition root |
+
+### 4.3. Какие абстракции добавить
+
+| Интерфейс | Слой | Назначение | Кто реализует |
+|---|---|---|---|
+| `PasswordHasher` | `domain/service` | Хеширование и сравнение паролей | `Sha256PasswordHasher` |
+| `RequestValidator` | `application/validation` | Валидация запроса | `RegexRequestValidator` |
+| `EffectiveRuleResolver` | `domain/service` | Наследование прав по пути | (реализация в домене) |
+
+Отдельные интерфейсы `UserStorage`, `ResourceStorage`, `RuleStorage` не вводятся: три существующих репозитория уже покрывают поиск. Если понадобится заменить источник данных (файл, БД), интерфейс репозитория — достаточная точка расширения.
+
+```kotlin
+// domain/service/PasswordHasher.kt
+interface PasswordHasher {
+    fun hash(password: String, salt: ByteArray): ByteArray
+    fun verify(password: String, salt: ByteArray, expected: PasswordHash): Boolean
+}
+```
+
+```kotlin
+// application/validation/RequestValidator.kt
+interface RequestValidator {
+    fun validate(request: AccessRequest): AccessResult?
+}
+```
