@@ -136,3 +136,28 @@ graph LR
 | `AccessService.kt` | `StorageUserRepository`, `StorageResourceRepository`, `StorageRuleRepository` | Infrastructure | Реализации → инфраструктура |
 | `Cli.kt` | `EXIT_*`, `REQUIRED_KEYS`, `parseKeyValues`, `printHelp` | Interface Adapters | Разделить на `CliArgument`, `CliParser`, `HelpPrinter`, `ExitCode` |
 | `Main.kt` | `main()` | Composition root | Тонкий `main` + `ApplicationFactory` |
+
+## 3. Направление зависимостей
+
+Правило: зависимости направлены внутрь.
+
+```
+Composition root ──→ Infrastructure ──→ Application ──→ Domain
+Composition root ──→ Adapters       ──→ Application ──→ Domain
+```
+
+На практике:
+
+- Domain не импортирует ничего из Application, Adapters, Infrastructure. Ни одного `import java.security.*`, ни одного `import kotlin.system.exitProcess`.
+- Application не импортирует конкретные реализации из Infrastructure — только интерфейсы из Domain.
+- Infrastructure импортирует всё, что нужно.
+- Composition root знает обо всех слоях — единственное разрешённое исключение.
+
+Инверсия зависимостей на примере `PasswordHasher`:
+
+```
+Domain:          interface PasswordHasher                        ← объявлен здесь
+Infrastructure:  class Sha256PasswordHasher : PasswordHasher     ← реализован здесь
+Application:     class Authenticator(private val hasher: PasswordHasher)
+                 ← зависит от абстракции, не от реализации
+```
