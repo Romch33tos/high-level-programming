@@ -1,5 +1,6 @@
 import application.AccessService
 import application.auth.DefaultAuthenticator
+import domain.service.EffectiveRuleResolver
 import infrastructure.repository.StorageResourceRepository
 import infrastructure.repository.StorageRuleRepository
 import infrastructure.repository.StorageUserRepository
@@ -10,7 +11,6 @@ import infrastructure.storage.InMemoryUserStorage
 import infrastructure.storage.Storage
 import infrastructure.validation.RegexRequestValidator
 import infrastructure.validation.ValidationRules
-import domain.service.EffectiveRuleResolver
 
 object ApplicationFactory {
   fun create(): AccessService {
