@@ -1,46 +1,40 @@
+import application.dto.AccessResult
+import presentation.cli.AccessResultMapper
+import presentation.cli.CliArgument
+import presentation.cli.CliParser
+import presentation.cli.CliRequestMapper
+import presentation.cli.ExitCode
+import presentation.cli.HelpPrinter
+import kotlin.system.exitProcess
+
 fun main(args: Array<String>) {
-    if (args.isEmpty()) {
-        printHelp()
-        kotlin.system.exitProcess(EXIT_HELP)
-    }
-    if (args.contains("-h") || args.contains("--help")) {
-        printHelp()
-        kotlin.system.exitProcess(EXIT_HELP)
-    }
+  if (args.isEmpty()) {
+    HelpPrinter.print()
+    exitProcess(ExitCode.HELP.code)
+  }
+  if (args.contains("-h") || args.contains(CliArgument.HELP.key)) {
+    HelpPrinter.print()
+    exitProcess(ExitCode.HELP.code)
+  }
 
-    val map = parseKeyValues(args)
-    if (map == null) {
-        printHelp()
-        kotlin.system.exitProcess(EXIT_BAD_FORMAT)
-    }
+  val parser = CliParser()
+  val parsed = parser.parse(args) ?: run {
+    HelpPrinter.print()
+    exitProcess(ExitCode.BAD_FORMAT.code)
+  }
 
-    for (key in REQUIRED_KEYS) {
-        if (map[key].isNullOrBlank()) {
-            printHelp()
-            kotlin.system.exitProcess(EXIT_BAD_FORMAT)
-        }
-    }
+  val hasAllRequired = CliArgument.requiredKeys.all { key -> !parsed[key].isNullOrBlank() }
+  if (!hasAllRequired) {
+    HelpPrinter.print()
+    exitProcess(ExitCode.BAD_FORMAT.code)
+  }
 
-    val volume = map["--volume"]!!.toIntOrNull()
-    if (volume == null) {
-        printHelp()
-        kotlin.system.exitProcess(EXIT_BAD_FORMAT)
-    }
+  val request = CliRequestMapper().map(parsed) ?: run {
+    HelpPrinter.print()
+    exitProcess(ExitCode.BAD_FORMAT.code)
+  }
 
-    val service = AccessService(
-        users = StorageUserRepository(),
-        resources = StorageResourceRepository(),
-        rules = StorageRuleRepository()
-    )
-
-    val code = service.check(
-        AccessRequest(
-            login = map["--login"]!!,
-            password = map["--password"]!!,
-            action = map["--action"]!!,
-            resourcePath = map["--resource"]!!,
-            volume = volume
-        )
-    )
-    kotlin.system.exitProcess(code)
+  val service = ApplicationFactory.create()
+  val result: AccessResult = service.check(request)
+  exitProcess(AccessResultMapper.toExitCode(result).code)
 }

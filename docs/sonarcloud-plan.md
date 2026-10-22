@@ -67,10 +67,12 @@ sonar.kotlin.detekt.reportPaths=build/reports/detekt.xml
 
 ### Вариант A. Прямая загрузка (для локального запуска)
 
+Используется опубликованная сборка `7.2.0.5079-linux-x64`. Имя архива и каталог после распаковки содержат суффикс платформы `-linux-x64`, а не просто `-linux`:
+
 ```bash
-wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.2.0.1092-linux.zip
-unzip sonar-scanner-cli-7.2.0.1092-linux.zip
-export PATH=$PATH:$(pwd)/sonar-scanner-7.2.0.1092-linux/bin
+wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.2.0.5079-linux-x64.zip
+unzip sonar-scanner-cli-7.2.0.5079-linux-x64.zip
+export PATH=$PATH:$(pwd)/sonar-scanner-7.2.0.5079-linux-x64/bin
 ```
 
 Проверка:
@@ -100,6 +102,11 @@ sonar-scanner \
 ```
 
 При успехе в терминале появится `ANALYSIS SUCCESSFUL`.
+
+Важно различать два разных исхода:
+
+- **Ошибка анализа (Analysis failed)** — сканер не смог загрузить или обработать отчёт: неверный токен, недоступен `sonarcloud.io`, синтаксическая ошибка в `sonar-project.properties`, отсутствуют исходники. В этом случае Quality Gate вообще не вычисляется, и в SonarCloud отображается **Not computed** (или статус отсутствует) . Это проблема инфраструктуры или конфигурации, а не качества кода.
+- **Проваленный Quality Gate (Gate failed)** — анализ прошёл успешно, отчёт загружен, но хотя бы одно условие порога не выполнено (покрытие ниже 80%, дублирование выше 3%, есть критические проблемы в новом коде и т.д.). SonarCloud явно показывает **Failed** . Это проблема качества кода.
 
 ## Шаг 6. Автоматизация через GitHub Actions
 
@@ -153,9 +160,9 @@ jobs:
 - `fetch-depth: 0` — SonarCloud нужна полная история для инкрементального анализа.
 - `build.sh` выполняется до сканирования, чтобы появились артефакты.
 - `SONAR_TOKEN` читается из GitHub Secrets (шаг 2).
-- Проверка Quality Gate блокирует мерж PR, если качество ниже порога.
+- Шаг `Check Quality Gate` завершится с ошибкой, если Gate провален, но **сам по себе не блокирует слияние PR** — он лишь выставляет статус проверки. Блокировка обеспечивается правилами защиты ветки (см. шаг 7).
 
-## Шаг 7. Quality Gate
+## Шаг 7. Quality Gate и блокировка слияния PR
 
 По умолчанию SonarCloud использует **Sonar way**:
 
@@ -172,6 +179,15 @@ jobs:
 1. Страница проекта → **Administration** → **Quality Gate**.
 2. **«Create»** — создать свой порог.
 3. Задать значения и привязать к проекту.
+
+**Чтобы Gate действительно блокировал слияние PR**, нужно сделать статус проверки обязательным в настройках ветки GitHub:
+
+1. Репозиторий → **Settings** → **Branches** (или **Rules** → **Rulesets**).
+2. Для ветки `main` включить **Require status checks to pass before merging** .
+3. В списке обязательных проверок найти и добавить статус, который публикует workflow `SonarCloud Analysis` (обычно это имя job или шага, например `sonarcloud` или `SonarCloud Analysis / sonarcloud`). Точное имя появится в списке после первого запуска workflow .
+4. Сохранить правило.
+
+После этого, если Gate провален (или шаг `Check Quality Gate` упал), GitHub пометит соответствующий check как failed, и кнопка merge будет заблокирована до исправления.
 
 ## Шаг 8. Проверка интеграции
 
@@ -191,5 +207,11 @@ git push origin lab3-analysis
    - открыть [sonarcloud.io](https://sonarcloud.io);
    - проект → Issues, Coverage, Duplications.
 
-4. Статус Quality Gate в PR:
-   - на странице PR появится ✅ или ❌.
+4. Проверить блокировку слияния:
+   - создать PR с заведомо провальным Gate (например, без тестов на новый код);
+   - убедиться, что кнопка merge заблокирована и в разделе checks отображается failed-статус SonarCloud;
+   - исправить проблемы, дождаться зелёного Gate и убедиться, что merge разблокирован.
+
+5. Убедиться, что ошибка анализа и провал Gate различимы:
+   - при ошибке анализа (например, временно указать неверный токен) в SonarCloud не будет вердикта Gate, а workflow упадёт на шаге сканирования;
+   - при провале Gate анализ завершится успешно, но шаг `Check Quality Gate` вернёт ошибку, а в SonarCloud будет явный статус **Failed**.
