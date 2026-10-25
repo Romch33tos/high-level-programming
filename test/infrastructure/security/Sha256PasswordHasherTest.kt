@@ -2,6 +2,7 @@ package infrastructure.security
 
 import domain.model.PasswordHash
 import org.junit.jupiter.api.Assertions.assertArrayEquals
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -20,10 +21,8 @@ class Sha256PasswordHasherTest {
 
   @Test
   fun `shouldProduceSameLengthAsSha256`() {
-    assertArrayEquals(ByteArray(32), hasher.hash("", ByteArray(0)).copyOf())
-    // фактическая проверка длины:
     val hash = hasher.hash("secret", salt)
-    assertTrue(hash.size == 32)
+    assertEquals(32, hash.size, "Хеш SHA-256 должен быть длиной 32 байта")
   }
 
   @Test
