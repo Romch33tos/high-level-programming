@@ -143,24 +143,35 @@
 
 ## 5. Результаты выполнения тестов
 
-> Раздел заполняется после написания и запуска тестов.
-
 ### 5.1. Что пришлось изменить в проекте
-
-- _(заполнить: перечень выполненных рефакторингов из раздела 3)_
+- Класс `User` приведен к `data class` для удобства использования в тестах-фикстурах (появились `copy()`, читаемый `toString()`). Логика работы `equals/hashCode` не изменилась.
+- В `HelpPrinter` текст справки вынесен в публичную константу `helpText`. Метод `print()` теперь просто выводит её, что позволило протестировать содержимое без перехвата `System.out`.
+- Скрипты сборки (`build.sh`, `run.sh`, `test.sh`) перенесены в директорию `scripts/` согласно офф-топ требованиям. Добавлены новые скрипты для компиляции и запуска JUnit-тестов (`build_tests.sh`, `run_unit_tests.sh`).
 
 ### 5.2. Примеры проверяемых сценариев
 
 | Тест | Краткое описание |
 |---|---|
-| _(заполнить)_ | _(заполнить)_ |
+| `shouldReturnBadFormatWhenPathIsEmpty` | Валидатор возвращает `BadFormat`, если путь пустой |
+| `shouldFallbackToParentRule` | `EffectiveRuleResolver` находит правило для родительского пути, если точного нет |
+| `shouldReturnVolumeExceededWhenVolumeIsGreaterThanMax` | `AccessService` возвращает `VolumeExceeded`, если объем больше максимального |
+| `shouldMapSuccessToSuccessExitCode` | Маппер корректно переводит `AccessResult.Success` в `ExitCode.SUCCESS` |
+| `shouldVerifyWhenPasswordMatches` | Хешер паролей успешно верифицирует правильный пароль |
+| `shouldNotReportPrefixWhenPathsAreUnrelated` | Проверка метода `isPrefixOf` для несвязанных путей |
 
 ### 5.3. Классы, не покрытые тестами, и причины
-
-- _(заполнить, сослаться на п. 4.3)_
+- `Main.kt` — точка входа, использует `exitProcess`, тестируется на интеграционном уровне.
+- `CliRequestMapper` — зависит от сторонней библиотеки `kotlinx.cli`, оставлен для интеграционных тестов.
+- `ApplicationFactory` — только связывает зависимости (wiring), проверяется косвенно через сценарии `AccessService`.
+- `Storage` — статическая фикстура данных.
 
 ### 5.4. Итоги запуска
+- Всего тестов: **99**
+- Успешно пройдено: **99**
+- Провалено: **0**
 
-- Всего тестов: _(заполнить)_
-- Успешно пройдено: _(заполнить)_
-- Провалено: _(заполнить)_
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/1dc6bffb-902f-406b-bf77-b4289e27c955" height="150" alt="Статистика сборки тестов" style="margin-right: 15px;" />
+  <img src="https://github.com/user-attachments/assets/a6a760ea-17a1-4bb8-a025-b1b9dd29f47f" height="150" alt="Отчет JUnit о прохождении тестов" />
+</p>
+<p align="center"><i>Скриншоты успешного выполнения компиляции и запуска unit-тестов</i></p>
