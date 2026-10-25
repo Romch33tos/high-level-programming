@@ -58,7 +58,7 @@ class StorageUserRepositoryTest {
   fun `shouldNotVerifyPasswordWhenHashDiffers`() {
     val repo = StorageUserRepository(
       InMemoryUserStorage(listOf(alice)),
-      FakeHasher(mapOf("wrong" to byteArrayOf(3, 4)))
+      FakeHasher(mapOf("wrong" to byteArrayOf(9, 9)))
     )
     assertFalse(repo.verifyPassword(alice, "wrong"))
   }
