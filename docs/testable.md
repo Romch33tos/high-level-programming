@@ -108,3 +108,31 @@
   а удобная структура для покрытия каждой ветки отдельным тестом.
 - `StorageUserRepository` использует `MessageDigest.isEqual` — статический
   детерминированный метод, тестируется через фейковый `PasswordHasher`.
+
+  ---
+
+## 4. План тестового покрытия
+
+### 4.1. Unit-тесты без фейков
+
+`ActionTest`, `ResourcePathTest`, `ResourceTest`, `ByteArrayValueTest`,
+`PasswordHashTest`, `EffectiveRuleResolverTest`, `RegexRequestValidatorTest`,
+`AccessResultMapperTest`, `HexTest`, `Sha256PasswordHasherTest`.
+
+### 4.2. Unit-тесты с фейками
+
+`DefaultAuthenticatorTest` (fake `UserRepository`),
+`AccessServiceTest` (fake `RequestValidator`, `Authenticator`,
+`ResourceRepository`, `RuleRepository` — покрытие всех 8 исходов `AccessResult`),
+`StorageUserRepositoryTest`, `StorageResourceRepositoryTest`,
+`StorageRuleRepositoryTest`.
+
+### 4.3. Не покрывается тестами (и почему)
+
+| Компонент | Причина |
+|---|---|
+| `Main` | точка входа, `exitProcess`, интеграционный уровень |
+| `CliRequestMapper` | зависимость от `kotlinx.cli`, интеграционный уровень |
+| `ApplicationFactory` | wiring, проверяется косвенно |
+| `HelpPrinter.print()` | побочный эффект в stdout; проверяется константа `helpText` |
+| `Storage` | статическая фикстура |
