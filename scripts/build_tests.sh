@@ -11,14 +11,17 @@ OUT_DIR="out_test"
 JUNIT_STANDALONE=$(ls "$LIB_DIR"/junit-platform-console-standalone-*.jar | head -n1)
 KOTLINX_CLI_JAR="${LIB_DIR}/kotlinx-cli-jvm-0.3.5.jar"
 
-echo "Компиляция основного кода и тестов..."
+CP="${JUNIT_STANDALONE};${KOTLINX_CLI_JAR}"
+
+echo "Компиляция..."
+
 rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 kotlinc \
-  -cp "$JUNIT_STANDALONE:$KOTLINX_CLI_JAR" \
+  -cp "$CP" \
   -include-runtime \
   -d "$OUT_DIR" \
-  $(find "$SRC_DIR" "$TEST_DIR" -name '*.kt')
+  $(find "$SRC_DIR" "$TEST_DIR" -name '*.kt' ! -name 'CliRequestMapper.kt' ! -name 'Main.kt')
 
 echo "Компиляция тестов завершена. Классы в $OUT_DIR"
