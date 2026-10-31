@@ -1,4 +1,6 @@
 import application.dto.AccessResult
+import infrastructure.repository.jdbc.DatabaseConnectionException
+import infrastructure.repository.jdbc.DatabaseQueryException
 import presentation.cli.AccessResultMapper
 import presentation.cli.CliRequestMapper
 import presentation.cli.ExitCode
@@ -21,7 +23,13 @@ fun main(args: Array<String>) {
 
   val service = ApplicationFactory.create()
   
-  val result: AccessResult = service.check(request)
+  val result: AccessResult = try {
+      service.check(request)
+  } catch (e: DatabaseConnectionException) {
+      exitProcess(9)
+  } catch (e: DatabaseQueryException) {
+      exitProcess(10)
+  }
 
   exitProcess(AccessResultMapper.toExitCode(result).code)
 }
