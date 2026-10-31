@@ -16,3 +16,10 @@ if [ -z "$H2_JAR" ]; then
 fi
 
 mkdir -p "$DATA_DIR"
+
+echo "Инициализация базы данных H2..."
+java -cp "$H2_JAR" org.h2.tools.RunScript \
+  -url "jdbc:h2:./$DATA_DIR/app_db" \
+  -user sa \
+  -password "" \
+  -script "$SQL_DIR/init.sql"
