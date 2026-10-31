@@ -23,3 +23,12 @@ java -cp "$H2_JAR" org.h2.tools.RunScript \
   -user sa \
   -password "" \
   -script "$SQL_DIR/init.sql"
+
+echo "Заполнение базы данных тестовыми данными..."
+java -cp "$H2_JAR" org.h2.tools.RunScript \
+  -url "jdbc:h2:./$DATA_DIR/app_db" \
+  -user sa \
+  -password "" \
+  -script "$SQL_DIR/fill.sql"
+
+echo "База данных успешно создана и заполнена: $DATA_DIR/app_db.mv.db"
