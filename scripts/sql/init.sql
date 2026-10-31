@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS access_rules;
+DROP TABLE IF EXISTS resources;
+DROP TABLE IF EXISTS users;
