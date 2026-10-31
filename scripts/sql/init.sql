@@ -14,3 +14,13 @@ CREATE TABLE resources (
     parent_path VARCHAR(255) NOT NULL,
     max_volume INT NOT NULL
 );
+
+CREATE TABLE access_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(50) NOT NULL,
+    resource_path VARCHAR(255) NOT NULL,
+    can_read BOOLEAN NOT NULL DEFAULT FALSE,
+    can_write BOOLEAN NOT NULL DEFAULT FALSE,
+    can_execute BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (login) REFERENCES users(login) ON DELETE CASCADE
+);
