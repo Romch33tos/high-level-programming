@@ -4,6 +4,9 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 
+class DatabaseConnectionException(message: String, cause: Throwable) : RuntimeException(message, cause)
+class DatabaseQueryException(message: String, cause: Throwable) : RuntimeException(message, cause)
+
 object DatabaseConnection {
   private const val URL = "jdbc:h2:./data/app_db"
   private const val USER = "sa"
@@ -18,6 +21,10 @@ object DatabaseConnection {
   }
 
   fun getConnection(): Connection {
-    return DriverManager.getConnection(URL, USER, PASSWORD)
+    try {
+      return DriverManager.getConnection(URL, USER, PASSWORD)
+    } catch (e: SQLException) {
+      throw DatabaseConnectionException("Не удалось подключиться к базе данных", e)
+    }
   }
 }
