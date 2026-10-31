@@ -9,3 +9,11 @@ INSERT INTO resources (name, parent_path, max_volume) VALUES
 ('C', 'A.B', 25),
 ('D', 'A', 10),
 ('E', '', 30);
+
+INSERT INTO access_rules (login, resource_path, can_read, can_write, can_execute) VALUES
+('alice', 'A', TRUE, TRUE, TRUE),
+('alice', 'A.B', TRUE, FALSE, FALSE),
+('alice', 'A.B.C', FALSE, TRUE, FALSE),
+('bob', 'A', TRUE, FALSE, FALSE),
+('bob', 'A.D', TRUE, TRUE, TRUE),
+('carol', 'A.B.C', TRUE, TRUE, TRUE);
