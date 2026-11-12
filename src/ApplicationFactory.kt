@@ -1,29 +1,22 @@
 import application.AccessService
 import application.auth.DefaultAuthenticator
 import domain.service.EffectiveRuleResolver
-import infrastructure.repository.StorageResourceRepository
-import infrastructure.repository.StorageRuleRepository
-import infrastructure.repository.StorageUserRepository
+import infrastructure.repository.jdbc.JdbcResourceRepository
+import infrastructure.repository.jdbc.JdbcRuleRepository
+import infrastructure.repository.jdbc.JdbcUserRepository
 import infrastructure.security.Sha256PasswordHasher
-import infrastructure.storage.InMemoryResourceStorage
-import infrastructure.storage.InMemoryRuleStorage
-import infrastructure.storage.InMemoryUserStorage
-import infrastructure.storage.Storage
 import infrastructure.validation.RegexRequestValidator
 import infrastructure.validation.ValidationRules
 
 object ApplicationFactory {
   fun create(): AccessService {
     val hasher = Sha256PasswordHasher()
-    val userStorage = InMemoryUserStorage(Storage.users)
-    val resourceStorage = InMemoryResourceStorage(Storage.resources)
-    val ruleStorage = InMemoryRuleStorage(Storage.accessRules)
-
+    
     return AccessService(
       validator = RegexRequestValidator(ValidationRules()),
-      authenticator = DefaultAuthenticator(StorageUserRepository(userStorage, hasher)),
-      resources = StorageResourceRepository(resourceStorage),
-      rules = StorageRuleRepository(ruleStorage, EffectiveRuleResolver())
+      authenticator = DefaultAuthenticator(JdbcUserRepository(hasher)),
+      resources = JdbcResourceRepository(),
+      rules = JdbcRuleRepository(EffectiveRuleResolver())
     )
   }
 }

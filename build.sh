@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+cd "$(dirname "$0")/.."
+
 SRC_DIR="src"
 LIB_DIR="lib"
 KOTLINX_CLI_JAR="${LIB_DIR}/kotlinx-cli-jvm-0.3.5.jar"
+H2_JAR="${LIB_DIR}/h2-2.2.224.jar"
 JAR_NAME="app.jar"
 BUILD_DIR="build"
 
-if [ ! -f "${KOTLINX_CLI_JAR}" ]; then
-  echo "Не найден ${KOTLINX_CLI_JAR}. Скачайте kotlinx-cli-jvm-0.3.5.jar в каталог lib/"
+if [ ! -f "${KOTLINX_CLI_JAR}" ] || [ ! -f "${H2_JAR}" ]; then
+  echo "Не найдены библиотеки в lib/. Проверьте наличие kotlinx-cli и h2."
   exit 1
 fi
 
@@ -17,16 +20,14 @@ mkdir -p "${BUILD_DIR}/classes"
 rm -f "${JAR_NAME}"
 
 kotlinc "${SRC_DIR}" \
-  -cp "${KOTLINX_CLI_JAR}" \
+  -cp "${KOTLINX_CLI_JAR};${H2_JAR}" \
   -include-runtime \
   -d "${BUILD_DIR}/app-with-runtime.jar"
 
 cd "${BUILD_DIR}/classes"
 jar xf "../app-with-runtime.jar"
-cd - > /dev/null
-
-cd "${BUILD_DIR}/classes"
 jar xf "../../${KOTLINX_CLI_JAR}"
+jar xf "../../${H2_JAR}"
 cd - > /dev/null
 
 cat > "${BUILD_DIR}/MANIFEST.MF" <<EOF
